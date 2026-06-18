@@ -1,0 +1,17 @@
+{
+  "creativetab.adaptandacquired.all": "Adapt And Acquired",
+  "block.adaptandacquired.hardstone": "Hardstone",
+  "block.adaptandacquired.hardslate": "Hardslate",
+  "block.adaptandacquired.hardrack": "Hardrack",
+
+  "item.adaptandacquired.research_tool": "Research Tool",
+  "tooltip.adaptandacquired.research_tool.tooltip" : "Right click blocks/mobs to acquired a skill \nHold shift for more info",
+  "tooltip.adaptandacquired.research_tool.shift_down" : "Sometimes the skill requires specific conditions",
+
+  "item.adaptandacquired.green_grum": "Green Grum",
+  "tooltip.adaptandacquired.green_grum.tooltip" : "Removes your defense skill",
+  "item.adaptandacquired.red_rawchew": "Red Rawchew",
+  "tooltip.adaptandacquired.red_rawchew.tooltip" : "Removes your offense skill",
+  "item.adaptandacquired.blue_bembry": "Blue Bembry",
+  "tooltip.adaptandacquired.blue_bembry.tooltip" : "Removes your support skill"
+}
