@@ -77,6 +77,7 @@ public class ResearchTool extends Item {
                 if (skills.getSupSkill().equals("None")) {
                     if(clickedBlock == Blocks.DIORITE) {
                         skills.setSupSkill("DIORITE");
+                        pContext.getPlayer().sendSystemMessage(Component.literal("Acquired \"DIORITE (useless)\" skill").withStyle(ChatFormatting.BLUE));
                         PlaySkillUnlocked(level, pContext);
                     }
                     else if(clickedBlock == Blocks.HAY_BLOCK) {
