@@ -30,9 +30,9 @@ public class adaptandacquired
     private static final Logger LOGGER = LogUtils.getLogger();
     //----------------------------------------------------------------------------------------------------//
     //----------------------------------------------------------------------------------------------------//
-    public adaptandacquired()
+    public adaptandacquired(FMLJavaModLoadingContext context)
     {
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        IEventBus modEventBus = context.getModEventBus();
         modEventBus.addListener(this::commonSetup);
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
@@ -45,7 +45,7 @@ public class adaptandacquired
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
         // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        context.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
     //----------------------------------------------------------------------------------------------------//
     //----------------------------------------------------------------------------------------------------//
