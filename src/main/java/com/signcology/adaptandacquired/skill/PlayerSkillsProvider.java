@@ -15,9 +15,9 @@ public class PlayerSkillsProvider implements ICapabilityProvider, INBTSerializab
     public static Capability<PlayerSkills> PLAYER_SKILLS = CapabilityManager.get(new CapabilityToken<PlayerSkills>() { });
 
     private PlayerSkills skills = null;
-    private final LazyOptional<PlayerSkills> optional = LazyOptional.of(this::createPlayerPerks);
+    private final LazyOptional<PlayerSkills> optional = LazyOptional.of(this::createPlayerSkills);
 
-    private PlayerSkills createPlayerPerks() {
+    private PlayerSkills createPlayerSkills() {
         if(this.skills == null) {
             this.skills = new PlayerSkills();
         }
@@ -36,12 +36,12 @@ public class PlayerSkillsProvider implements ICapabilityProvider, INBTSerializab
     @Override
     public CompoundTag serializeNBT() {
         CompoundTag nbt = new CompoundTag();
-        createPlayerPerks().saveNBTData(nbt);
+        createPlayerSkills().saveNBTData(nbt);
         return nbt;
     }
 
     @Override
     public void deserializeNBT(CompoundTag nbt) {
-        createPlayerPerks().loadNBTData(nbt);
+        createPlayerSkills().loadNBTData(nbt);
     }
 }

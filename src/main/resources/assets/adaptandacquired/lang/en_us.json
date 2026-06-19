@@ -5,7 +5,7 @@
   "block.adaptandacquired.hardrack": "Hardrack",
 
   "item.adaptandacquired.research_tool": "Research Tool",
-  "tooltip.adaptandacquired.research_tool.tooltip" : "Right click blocks/mobs to acquired a skill \nHold shift for more info",
+  "tooltip.adaptandacquired.research_tool.tooltip" : "Right click blocks/mobs to acquired a skill - Hold shift for more info",
   "tooltip.adaptandacquired.research_tool.shift_down" : "Sometimes the skill requires specific conditions",
 
   "item.adaptandacquired.green_grum": "Green Grum",

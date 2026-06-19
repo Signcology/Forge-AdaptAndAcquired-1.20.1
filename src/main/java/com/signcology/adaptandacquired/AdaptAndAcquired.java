@@ -12,7 +12,6 @@ import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -21,8 +20,8 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/mods.toml file
-@Mod(adaptandacquired.MODID)
-public class adaptandacquired
+@Mod(AdaptAndAcquired.MODID)
+public class AdaptAndAcquired
 {
     // Define mod id in a common place for everything to reference
     public static final String MODID = "adaptandacquired";
@@ -30,7 +29,7 @@ public class adaptandacquired
     private static final Logger LOGGER = LogUtils.getLogger();
     //----------------------------------------------------------------------------------------------------//
     //----------------------------------------------------------------------------------------------------//
-    public adaptandacquired(FMLJavaModLoadingContext context)
+    public AdaptAndAcquired(FMLJavaModLoadingContext context)
     {
         IEventBus modEventBus = context.getModEventBus();
         modEventBus.addListener(this::commonSetup);

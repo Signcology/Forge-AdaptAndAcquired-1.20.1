@@ -1,11 +1,10 @@
 package com.signcology.adaptandacquired.block;
 
-import com.signcology.adaptandacquired.adaptandacquired;
+import com.signcology.adaptandacquired.AdaptAndAcquired;
 import com.signcology.adaptandacquired.item.ModItems;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -18,7 +17,7 @@ import java.util.function.Supplier;
 
 public class ModBlocks {
     public static final DeferredRegister<Block> BLOCKS =
-            DeferredRegister.create(ForgeRegistries.BLOCKS, adaptandacquired.MODID);
+            DeferredRegister.create(ForgeRegistries.BLOCKS, AdaptAndAcquired.MODID);
 
 
     public static final RegistryObject<Block> HARDSTONE = registerBlock("hardstone",

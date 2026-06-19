@@ -1,6 +1,6 @@
 package com.signcology.adaptandacquired.item;
 
-import com.signcology.adaptandacquired.adaptandacquired;
+import com.signcology.adaptandacquired.AdaptAndAcquired;
 import com.signcology.adaptandacquired.item.custom.BlueBembry;
 import com.signcology.adaptandacquired.item.custom.GreenGrum;
 import com.signcology.adaptandacquired.item.custom.RedRawchew;
@@ -14,7 +14,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 public class ModItems {
     public static final DeferredRegister<Item> ITEMS =
-            DeferredRegister.create(ForgeRegistries.ITEMS, adaptandacquired.MODID);
+            DeferredRegister.create(ForgeRegistries.ITEMS, AdaptAndAcquired.MODID);
 
 
     public static final RegistryObject<Item> TESTYTIMMY = ITEMS.register("testytimmy",

@@ -9,6 +9,9 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -27,6 +30,9 @@ public class ResearchTool extends Item {
     private void PlaySkillUnlocked(Level level, UseOnContext pContext) {
         level.playSound(null, pContext.getClickedPos(), SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.BLOCKS);
     }
+    private void PlaySkillUnlocked(LivingEntity entity) {
+        entity.playSound(SoundEvents.AMETHYST_BLOCK_BREAK, 1, 1);
+    }
 
     public ResearchTool(Properties pProperties) {
         super(pProperties);
@@ -34,15 +40,34 @@ public class ResearchTool extends Item {
 
     @Override
     public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level pLevel, @NotNull Player pPlayer, @NotNull InteractionHand pUsedHand) {
-        if(!pLevel.isClientSide()) {
+        if(!pLevel.isClientSide() && Screen.hasShiftDown()) {
             pPlayer.getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent(skills -> {
-                pPlayer.sendSystemMessage(Component.literal("Defense Skill: " + skills.getDefSkill()).withStyle(ChatFormatting.GREEN));
-                pPlayer.sendSystemMessage(Component.literal("Offense Skill: " + skills.getOffSkill()).withStyle(ChatFormatting.RED));
-                pPlayer.sendSystemMessage(Component.literal("Support Skill: " + skills.getSupSkill()).withStyle(ChatFormatting.BLUE));
+                pPlayer.sendSystemMessage(Component.literal("Defense Skill: " + skills.getDefSkill()).withStyle(ChatFormatting.AQUA));
+                pPlayer.sendSystemMessage(Component.literal("Offense Skill: " + skills.getOffSkill()).withStyle(ChatFormatting.AQUA));
+                pPlayer.sendSystemMessage(Component.literal("Support Skill: " + skills.getSupSkill()).withStyle(ChatFormatting.AQUA));
             });
         }
         ItemStack itemstack = pPlayer.getItemInHand(pUsedHand);
         return InteractionResultHolder.fail(itemstack);
+    }
+
+    @Override
+    public @NotNull InteractionResult interactLivingEntity(ItemStack pStack, Player pPlayer, LivingEntity pInteractionTarget, InteractionHand pUsedHand) {
+        pPlayer.getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent( skills -> {
+            if (skills.getDefSkill().equals("None")) {
+                if(pInteractionTarget.getType() == EntityType.TURTLE) {
+                    skills.setDefSkill("Natural Armor");
+                    pPlayer.sendSystemMessage(Component.literal("Acquired \"Natural Armor\" skill").withStyle(ChatFormatting.GREEN));
+                    PlaySkillUnlocked(pInteractionTarget);
+                }
+                else if(pInteractionTarget.getType() == EntityType.IRON_GOLEM) {
+                    skills.setDefSkill("Iron Armor Expert");
+                    pPlayer.sendSystemMessage(Component.literal("Acquired \"Iron Armor Expert\" skill").withStyle(ChatFormatting.GREEN));
+                    PlaySkillUnlocked(pInteractionTarget);
+                }
+            }
+        });
+        return InteractionResult.PASS;
     }
 
     @Override
@@ -70,19 +95,19 @@ public class ResearchTool extends Item {
                 if (skills.getOffSkill().equals("None")) {
                     if(clickedBlock == Blocks.MAGMA_BLOCK) {
                         skills.setOffSkill("Burning Hands");
-                        pContext.getPlayer().sendSystemMessage(Component.literal("Acquired \"Burning Hands\" skill").withStyle(ChatFormatting.RED));
+                        pContext.getPlayer().sendSystemMessage(Component.literal("Acquired \"Burning Hands\" skill").withStyle(ChatFormatting.GREEN));
                         PlaySkillUnlocked(level, pContext);
                     }
                 }
                 if (skills.getSupSkill().equals("None")) {
                     if(clickedBlock == Blocks.DIORITE) {
                         skills.setSupSkill("DIORITE");
-                        pContext.getPlayer().sendSystemMessage(Component.literal("Acquired \"DIORITE (useless)\" skill").withStyle(ChatFormatting.BLUE));
+                        pContext.getPlayer().sendSystemMessage(Component.literal("Acquired \"DIORITE (useless)\" skill").withStyle(ChatFormatting.GREEN));
                         PlaySkillUnlocked(level, pContext);
                     }
                     else if(clickedBlock == Blocks.HAY_BLOCK) {
                         skills.setSupSkill("Traveler");
-                        pContext.getPlayer().sendSystemMessage(Component.literal("Acquired \"Traveler\" skill").withStyle(ChatFormatting.BLUE));
+                        pContext.getPlayer().sendSystemMessage(Component.literal("Acquired \"Traveler\" skill").withStyle(ChatFormatting.GREEN));
                         PlaySkillUnlocked(level, pContext);
                     }
                 }
@@ -99,7 +124,28 @@ public class ResearchTool extends Item {
         if(Screen.hasShiftDown()) {
             pTooltipComponents.add(Component.translatable("tooltip.adaptandacquired.research_tool.shift_down"));
         } else {
-            pTooltipComponents.add(Component.translatable("tooltip.adaptandacquired.research_tool.tooltip"));
+
+            Entity entity = pStack.getEntityRepresentation();
+            assert entity != null;
+
+            //pTooltipComponents.add(Component.translatable("tooltip.adaptandacquired.research_tool.tooltip"));
+
+            // Im lazy as fuck bruh
+            pTooltipComponents.add(Component.literal("Right-Click blocks/mobs to obtain a skill").withStyle(ChatFormatting.YELLOW));
+            pTooltipComponents.add(Component.literal("Not all blocks/mobs will give a skill and some may require some conditions").withStyle(ChatFormatting.YELLOW));
+            pTooltipComponents.add(Component.literal("Shift + Right-Click with this item to see your skills").withStyle(ChatFormatting.LIGHT_PURPLE));
+
+
+            // Crashes the game for some reason
+            /*
+            entity.getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent(skills -> {
+                pTooltipComponents.add(Component.translatable("tooltip.adaptandacquired.research_tool.tooltip"));
+                //pTooltipComponents.add(Component.literal("Your skills").withStyle(ChatFormatting.LIGHT_PURPLE));
+                //pTooltipComponents.add(Component.literal("Defense Skill: " + skills.getDefSkill() ).withStyle(ChatFormatting.LIGHT_PURPLE));
+                //pTooltipComponents.add(Component.literal("Offense Skill: " + skills.getOffSkill() ).withStyle(ChatFormatting.LIGHT_PURPLE));
+                //pTooltipComponents.add(Component.literal("Support Skill: " + skills.getSupSkill() ).withStyle(ChatFormatting.LIGHT_PURPLE));
+            });
+            */
         }
 
         super.appendHoverText(pStack, pLevel, pTooltipComponents, pIsAdvanced);

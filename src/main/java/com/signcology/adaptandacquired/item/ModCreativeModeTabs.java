@@ -1,7 +1,6 @@
 package com.signcology.adaptandacquired.item;
 
-import com.signcology.adaptandacquired.adaptandacquired;
-import com.signcology.adaptandacquired.block.ModBlocks;
+import com.signcology.adaptandacquired.AdaptAndAcquired;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -12,7 +11,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 public class ModCreativeModeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
-            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, adaptandacquired.MODID);
+            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, AdaptAndAcquired.MODID);
 
     public static final RegistryObject<CreativeModeTab> ADAPTANDACQUIRED = CREATIVE_MODE_TABS.register("adaptandacquired_tab",
             () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModItems.RESEARCH_TOOL.get()))

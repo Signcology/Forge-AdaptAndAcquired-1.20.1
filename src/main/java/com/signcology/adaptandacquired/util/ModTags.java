@@ -1,6 +1,6 @@
 package com.signcology.adaptandacquired.util;
 
-import com.signcology.adaptandacquired.adaptandacquired;
+import com.signcology.adaptandacquired.AdaptAndAcquired;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
@@ -14,14 +14,14 @@ public class ModTags {
         public static final TagKey<Block> STONE_BLOCK = createTag("stone_block");
 
         private static TagKey<Block> createTag(String name) {
-            return BlockTags.create(ResourceLocation.fromNamespaceAndPath(adaptandacquired.MODID, name));
+            return BlockTags.create(ResourceLocation.fromNamespaceAndPath(AdaptAndAcquired.MODID, name));
         }
     }
 
     public static class Items {
 
         private static TagKey<Item> createTag(String name) {
-            return ItemTags.create(ResourceLocation.fromNamespaceAndPath(adaptandacquired.MODID, name));
+            return ItemTags.create(ResourceLocation.fromNamespaceAndPath(AdaptAndAcquired.MODID, name));
         }
     }
 }
