@@ -1,8 +1,10 @@
 package com.signcology.adaptandacquired.item.custom;
 
+import com.signcology.adaptandacquired.skill.PlayerSkills;
 import com.signcology.adaptandacquired.skill.PlayerSkillsProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -27,11 +29,74 @@ import java.util.List;
 
 public class ResearchTool extends Item {
 
-    private void PlaySkillUnlocked(Level level, UseOnContext pContext) {
-        level.playSound(pContext.getPlayer(), pContext.getClickedPos(), SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.BLOCKS);
+    private void PlaySkillUnlocked(Level level, Player player, BlockPos position) {
+        level.playSound(null, position, SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.BLOCKS);
     }
     private void PlaySkillUnlocked(LivingEntity entity) {
         entity.playSound(SoundEvents.AMETHYST_BLOCK_BREAK, 1, 1);
+    }
+
+    private void CheckSkills(Level level, Player player, PlayerSkills skills, Block block) {
+        if (skills.getDefSkill().equals("None")) {
+            if(block == Blocks.GOLD_BLOCK) {
+                skills.setDefSkill("Gold Armor Expert");
+                player.sendSystemMessage(Component.literal("Acquired \"Gold Armor Expert\" skill").withStyle(ChatFormatting.GREEN));
+                PlaySkillUnlocked(level, player, player.blockPosition());
+            }
+            else if(block == Blocks.WHITE_WOOL) {
+                skills.setDefSkill("Fall Damage Immunity");
+                player.sendSystemMessage(Component.literal("Acquired \"Fall Damage Immunity\" skill").withStyle(ChatFormatting.GREEN));
+                PlaySkillUnlocked(level, player, player.blockPosition());
+            }
+        }
+
+        if (skills.getOffSkill().equals("None")) {
+            if(block == Blocks.MAGMA_BLOCK) {
+                skills.setOffSkill("Burning Hands");
+                player.sendSystemMessage(Component.literal("Acquired \"Burning Hands\" skill").withStyle(ChatFormatting.GREEN));
+                PlaySkillUnlocked(level, player, player.blockPosition());
+            }
+        }
+
+        if (skills.getSupSkill().equals("None")) {
+            if(block == Blocks.HAY_BLOCK) {
+                skills.setSupSkill("Traveler");
+                player.sendSystemMessage(Component.literal("Acquired \"Traveler\" skill").withStyle(ChatFormatting.GREEN));
+                PlaySkillUnlocked(level, player, player.blockPosition());
+            }
+            else if(block == Blocks.NETHER_PORTAL) {
+                skills.setSupSkill("Nether Shifter");
+                player.sendSystemMessage(Component.literal("Acquired \"Nether Shifter\" skill").withStyle(ChatFormatting.GREEN));
+                PlaySkillUnlocked(level, player, player.blockPosition());
+            }
+            else if(block == Blocks.END_PORTAL) {
+                skills.setSupSkill("Nether Shifter");
+                player.sendSystemMessage(Component.literal("Acquired \"End Shifter\" skill").withStyle(ChatFormatting.GREEN));
+                PlaySkillUnlocked(level, player, player.blockPosition());
+            }
+        }
+    }
+
+    private void CheckSkills(Player player, PlayerSkills skills, LivingEntity pInteractionTarget) {
+        if (skills.getDefSkill().equals("None")) {
+            if(pInteractionTarget.getType() == EntityType.TURTLE) {
+                skills.setDefSkill("Natural Armor");
+                player.sendSystemMessage(Component.literal("Acquired \"Natural Armor\" skill").withStyle(ChatFormatting.GREEN));
+                PlaySkillUnlocked(player);
+            }
+            else if(pInteractionTarget.getType() == EntityType.IRON_GOLEM) {
+                skills.setDefSkill("Iron Armor Expert");
+                player.sendSystemMessage(Component.literal("Acquired \"Iron Armor Expert\" skill").withStyle(ChatFormatting.GREEN));
+                PlaySkillUnlocked(player);
+            }
+        }
+        if (skills.getSupSkill().equals("None")) {
+            if(pInteractionTarget.getType() == EntityType.ENDERMAN) {
+                skills.setSupSkill("Teleporter");
+                player.sendSystemMessage(Component.literal("Acquired \"Teleporter\" skill").withStyle(ChatFormatting.GREEN));
+                PlaySkillUnlocked(player);
+            }
+        }
     }
 
     public ResearchTool(Properties pProperties) {
@@ -54,6 +119,8 @@ public class ResearchTool extends Item {
                 switch (skills.getSupSkill()) {
                     case "Traveler" -> pPlayer.sendSystemMessage(Component.literal("Slowly regenerate your hunger almost to full"));
                     case "Teleporter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to teleport 20 blocks in front of you (requires you hold a item because I can't code)"));
+                    case "Nether Shifter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to swap between the nether and the overworld (requires you hold a item because I can't code)"));
+                    case "End Shifter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to swap between the end and the overworld (requires you hold a item because I can't code)"));
                 }
             });
         }
@@ -63,27 +130,11 @@ public class ResearchTool extends Item {
 
     @Override
     public @NotNull InteractionResult interactLivingEntity(ItemStack pStack, Player pPlayer, LivingEntity pInteractionTarget, InteractionHand pUsedHand) {
-        pPlayer.getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent( skills -> {
-            if (skills.getDefSkill().equals("None")) {
-                if(pInteractionTarget.getType() == EntityType.TURTLE) {
-                    skills.setDefSkill("Natural Armor");
-                    pPlayer.sendSystemMessage(Component.literal("Acquired \"Natural Armor\" skill").withStyle(ChatFormatting.GREEN));
-                    PlaySkillUnlocked(pPlayer);
-                }
-                else if(pInteractionTarget.getType() == EntityType.IRON_GOLEM) {
-                    skills.setDefSkill("Iron Armor Expert");
-                    pPlayer.sendSystemMessage(Component.literal("Acquired \"Iron Armor Expert\" skill").withStyle(ChatFormatting.GREEN));
-                    PlaySkillUnlocked(pPlayer);
-                }
-            }
-            if (skills.getSupSkill().equals("None")) {
-                if(pInteractionTarget.getType() == EntityType.ENDERMAN) {
-                    skills.setSupSkill("Teleporter");
-                    pPlayer.sendSystemMessage(Component.literal("Acquired \"Teleporter\" skill").withStyle(ChatFormatting.GREEN));
-                    PlaySkillUnlocked(pPlayer);
-                }
-            }
-        });
+        if(!pPlayer.level().isClientSide()) {
+            pPlayer.getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent(skills -> {
+                CheckSkills(pPlayer, skills, pInteractionTarget);
+            });
+        }
         return InteractionResult.PASS;
     }
 
@@ -96,42 +147,9 @@ public class ResearchTool extends Item {
 
         pContext.getPlayer().getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent( skills -> {
             if(!level.isClientSide()) {
-                if (skills.getDefSkill().equals("None")) {
-                    if(clickedBlock == Blocks.GOLD_BLOCK) {
-                        skills.setDefSkill("Gold Armor Expert");
-                        pContext.getPlayer().sendSystemMessage(Component.literal("Acquired \"Gold Armor Expert\" skill").withStyle(ChatFormatting.GREEN));
-                        PlaySkillUnlocked(level, pContext);
-                    }
-                    else if(clickedBlock == Blocks.WHITE_WOOL) {
-                        skills.setDefSkill("Fall Damage Immunity");
-                        pContext.getPlayer().sendSystemMessage(Component.literal("Acquired \"Fall Damage Immunity\" skill").withStyle(ChatFormatting.GREEN));
-                        PlaySkillUnlocked(level, pContext);
-                    }
-                }
-
-                if (skills.getOffSkill().equals("None")) {
-                    if(clickedBlock == Blocks.MAGMA_BLOCK) {
-                        skills.setOffSkill("Burning Hands");
-                        pContext.getPlayer().sendSystemMessage(Component.literal("Acquired \"Burning Hands\" skill").withStyle(ChatFormatting.GREEN));
-                        PlaySkillUnlocked(level, pContext);
-                    }
-                }
-                if (skills.getSupSkill().equals("None")) {
-                    if(clickedBlock == Blocks.HAY_BLOCK) {
-                        skills.setSupSkill("Traveler");
-                        pContext.getPlayer().sendSystemMessage(Component.literal("Acquired \"Traveler\" skill").withStyle(ChatFormatting.GREEN));
-                        PlaySkillUnlocked(level, pContext);
-                    }
-                    else if(clickedBlock == Blocks.NETHER_PORTAL) {
-                        skills.setSupSkill("Nether Shifter");
-                        pContext.getPlayer().sendSystemMessage(Component.literal("Acquired \"Nether Shifter\" skill").withStyle(ChatFormatting.GREEN));
-                        PlaySkillUnlocked(level, pContext);
-                    }
-                }
-
+                CheckSkills(level, pContext.getPlayer(), skills, clickedBlock);
             }
         });
-
 
         return InteractionResult.SUCCESS;
     }
