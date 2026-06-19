@@ -4,23 +4,28 @@ import com.mojang.brigadier.Command;
 import com.signcology.adaptandacquired.AdaptAndAcquired;
 import com.signcology.adaptandacquired.skill.PlayerSkills;
 import com.signcology.adaptandacquired.skill.PlayerSkillsProvider;
+import net.minecraft.client.gui.font.providers.UnihexProvider;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.commands.CommandFunction;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.data.worldgen.DimensionTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.commands.SummonCommand;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
@@ -32,11 +37,19 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 
+import java.awt.*;
 import java.lang.ref.Reference;
 import java.util.Objects;
 
 @Mod.EventBusSubscriber(modid = AdaptAndAcquired.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ModEvent {
+
+    private static void updatePlayerLevel(Level level, Player player, int subtract) {
+        player.experienceLevel -= subtract;
+        var xp = EntityType.EXPERIENCE_ORB.spawn(level.getServer().getLevel(level.dimension()), player.blockPosition(), MobSpawnType.COMMAND);
+        assert xp != null;
+        xp.value = 1;
+    }
 
     private static void playEffectFire(Level level, Vec3 position) {
         // NOT WORKING ??????
@@ -135,6 +148,46 @@ public class ModEvent {
     }
 
     @SubscribeEvent
+    public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
+        event.getEntity().getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent(perks -> {
+            var level = event.getLevel();
+            var player = event.getEntity();
+
+            if(perks.getSupSkill().equals("Teleporter") && player.experienceLevel > 0 && Screen.hasAltDown()) {
+                player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING,20, 0, false, false));
+                var dis = 20;
+                var newPos = player.position().add(player.getLookAngle().multiply(dis,dis,dis));
+                player.teleportTo(newPos.x, newPos.y, newPos.z);
+                updatePlayerLevel(level, player, 1);
+                player.playSound(SoundEvents.ENDERMAN_TELEPORT, 1, 1);
+            }
+            else if (perks.getSupSkill().equals("Nether Shifter") && player.experienceLevel > 0 && Screen.hasAltDown()) {
+                if (level.dimension() == Level.OVERWORLD) {
+                    //player.changeDimension(level.getServer().getLevel(Level.NETHER));
+                    player.teleportTo(level.getServer().getLevel(Level.NETHER), player.position().x/8, player.position().y, player.position().z/8, null, player.yRotO, player.xRotO);
+                } else if (level.dimension() == Level.NETHER) {
+                    player.teleportTo(level.getServer().getLevel(Level.OVERWORLD), player.position().x*8, player.position().y, player.position().z*8, null, player.yRotO, player.xRotO);
+                }
+                player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING,20, 0, false, false));
+                player.playSound(SoundEvents.BEACON_ACTIVATE, 1, 1);
+                updatePlayerLevel(level, player, 1);
+            }
+            else if (perks.getSupSkill().equals("End Shifter") && player.experienceLevel > 0 && Screen.hasAltDown()) {
+                if (level.dimension() == Level.OVERWORLD) {
+                    //player.changeDimension(level.getServer().getLevel(Level.NETHER));
+                    player.teleportTo(level.getServer().getLevel(Level.END), player.position().x, player.position().y, player.position().z, null, player.yRotO, player.xRotO);
+                } else if (level.dimension() == Level.END) {
+                    player.teleportTo(level.getServer().getLevel(Level.OVERWORLD), player.position().x, player.position().y, player.position().z, null, player.yRotO, player.xRotO);
+                }
+                player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING,20, 0, false, false));
+                player.playSound(SoundEvents.BEACON_ACTIVATE, 1, 1);
+                updatePlayerLevel(level, player, 1);
+            }
+        });
+    }
+
+
+    @SubscribeEvent
     public static void onPlayerInteraction(PlayerInteractEvent.EntityInteractSpecific event) {
         event.getEntity().getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent(perks -> {
             if(perks.getOffSkill().equals("Burning Hands") && !event.getTarget().isOnFire() && Screen.hasAltDown()) {
@@ -142,10 +195,7 @@ public class ModEvent {
                 playEffectFire(event.getLevel(), event.getTarget().position());
 
                 if (event.getEntity().experienceLevel > 0) {
-                    event.getEntity().experienceLevel -= 1;
-                    var xp = EntityType.EXPERIENCE_ORB.spawn(event.getLevel().getServer().getLevel(event.getLevel().dimension()), event.getEntity().blockPosition(), MobSpawnType.COMMAND);
-                    assert xp != null;
-                    xp.value = 1;
+                    updatePlayerLevel(event.getLevel(), event.getEntity(), 1);
 
                     var dir = new Vec3(
                             event.getTarget().position().x - event.getEntity().position().x,

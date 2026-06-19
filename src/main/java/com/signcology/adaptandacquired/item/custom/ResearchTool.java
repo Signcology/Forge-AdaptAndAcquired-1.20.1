@@ -28,7 +28,7 @@ import java.util.List;
 public class ResearchTool extends Item {
 
     private void PlaySkillUnlocked(Level level, UseOnContext pContext) {
-        level.playSound(null, pContext.getClickedPos(), SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.BLOCKS);
+        level.playSound(pContext.getPlayer(), pContext.getClickedPos(), SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.BLOCKS);
     }
     private void PlaySkillUnlocked(LivingEntity entity) {
         entity.playSound(SoundEvents.AMETHYST_BLOCK_BREAK, 1, 1);
@@ -43,8 +43,18 @@ public class ResearchTool extends Item {
         if(!pLevel.isClientSide() && Screen.hasShiftDown()) {
             pPlayer.getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent(skills -> {
                 pPlayer.sendSystemMessage(Component.literal("Defense Skill: " + skills.getDefSkill()).withStyle(ChatFormatting.AQUA));
+                switch (skills.getDefSkill()) {
+                    case "Fall Damage Immunity" -> pPlayer.sendSystemMessage(Component.literal("Immune to fall damage"));
+                    case "Gold Armor Expert" -> pPlayer.sendSystemMessage(Component.literal("Gold armor regenerates and gain Resistance II when wearing full gold set"));
+                    case "Iron Armor Expert" -> pPlayer.sendSystemMessage(Component.literal("Gain Strength when wearing full iron set"));
+                }
                 pPlayer.sendSystemMessage(Component.literal("Offense Skill: " + skills.getOffSkill()).withStyle(ChatFormatting.AQUA));
+                if (skills.getOffSkill().equals("Burning Hands")) pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click burns and knockback enemies at the cost of a level"));
                 pPlayer.sendSystemMessage(Component.literal("Support Skill: " + skills.getSupSkill()).withStyle(ChatFormatting.AQUA));
+                switch (skills.getSupSkill()) {
+                    case "Traveler" -> pPlayer.sendSystemMessage(Component.literal("Slowly regenerate your hunger almost to full"));
+                    case "Teleporter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to teleport 20 blocks in front of you (requires you hold a item because I can't code)"));
+                }
             });
         }
         ItemStack itemstack = pPlayer.getItemInHand(pUsedHand);
@@ -58,12 +68,19 @@ public class ResearchTool extends Item {
                 if(pInteractionTarget.getType() == EntityType.TURTLE) {
                     skills.setDefSkill("Natural Armor");
                     pPlayer.sendSystemMessage(Component.literal("Acquired \"Natural Armor\" skill").withStyle(ChatFormatting.GREEN));
-                    PlaySkillUnlocked(pInteractionTarget);
+                    PlaySkillUnlocked(pPlayer);
                 }
                 else if(pInteractionTarget.getType() == EntityType.IRON_GOLEM) {
                     skills.setDefSkill("Iron Armor Expert");
                     pPlayer.sendSystemMessage(Component.literal("Acquired \"Iron Armor Expert\" skill").withStyle(ChatFormatting.GREEN));
-                    PlaySkillUnlocked(pInteractionTarget);
+                    PlaySkillUnlocked(pPlayer);
+                }
+            }
+            if (skills.getSupSkill().equals("None")) {
+                if(pInteractionTarget.getType() == EntityType.ENDERMAN) {
+                    skills.setSupSkill("Teleporter");
+                    pPlayer.sendSystemMessage(Component.literal("Acquired \"Teleporter\" skill").withStyle(ChatFormatting.GREEN));
+                    PlaySkillUnlocked(pPlayer);
                 }
             }
         });
@@ -100,14 +117,14 @@ public class ResearchTool extends Item {
                     }
                 }
                 if (skills.getSupSkill().equals("None")) {
-                    if(clickedBlock == Blocks.DIORITE) {
-                        skills.setSupSkill("DIORITE");
-                        pContext.getPlayer().sendSystemMessage(Component.literal("Acquired \"DIORITE (useless)\" skill").withStyle(ChatFormatting.GREEN));
-                        PlaySkillUnlocked(level, pContext);
-                    }
-                    else if(clickedBlock == Blocks.HAY_BLOCK) {
+                    if(clickedBlock == Blocks.HAY_BLOCK) {
                         skills.setSupSkill("Traveler");
                         pContext.getPlayer().sendSystemMessage(Component.literal("Acquired \"Traveler\" skill").withStyle(ChatFormatting.GREEN));
+                        PlaySkillUnlocked(level, pContext);
+                    }
+                    else if(clickedBlock == Blocks.NETHER_PORTAL) {
+                        skills.setSupSkill("Nether Shifter");
+                        pContext.getPlayer().sendSystemMessage(Component.literal("Acquired \"Nether Shifter\" skill").withStyle(ChatFormatting.GREEN));
                         PlaySkillUnlocked(level, pContext);
                     }
                 }
