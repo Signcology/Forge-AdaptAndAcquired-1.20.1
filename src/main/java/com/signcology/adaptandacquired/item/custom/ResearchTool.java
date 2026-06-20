@@ -89,6 +89,11 @@ public class ResearchTool extends Item {
                 player.sendSystemMessage(Component.literal("Acquired \"Iron Armor Expert\" skill").withStyle(ChatFormatting.GREEN));
                 PlaySkillUnlocked(player);
             }
+            else if(pInteractionTarget.getType() == EntityType.IRON_GOLEM) {
+                skills.setDefSkill("Leather Armor Expert");
+                player.sendSystemMessage(Component.literal("Acquired \"Leather Armor Expert\" skill").withStyle(ChatFormatting.GREEN));
+                PlaySkillUnlocked(player);
+            }
         }
         if (skills.getSupSkill().equals("None")) {
             if(pInteractionTarget.getType() == EntityType.ENDERMAN) {
@@ -112,15 +117,16 @@ public class ResearchTool extends Item {
                     case "Fall Damage Immunity" -> pPlayer.sendSystemMessage(Component.literal("Immune to fall damage"));
                     case "Gold Armor Expert" -> pPlayer.sendSystemMessage(Component.literal("Gold armor regenerates and gain Resistance II when wearing full gold set"));
                     case "Iron Armor Expert" -> pPlayer.sendSystemMessage(Component.literal("Gain Strength when wearing full iron set"));
+                    case "Leather Armor Expert" -> pPlayer.sendSystemMessage(Component.literal("Gain buffs when wearing leather armor"));
                 }
                 pPlayer.sendSystemMessage(Component.literal("Offense Skill: " + skills.getOffSkill()).withStyle(ChatFormatting.AQUA));
                 if (skills.getOffSkill().equals("Burning Hands")) pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click burns and knockback enemies at the cost of a level"));
                 pPlayer.sendSystemMessage(Component.literal("Support Skill: " + skills.getSupSkill()).withStyle(ChatFormatting.AQUA));
                 switch (skills.getSupSkill()) {
                     case "Traveler" -> pPlayer.sendSystemMessage(Component.literal("Slowly regenerate your hunger almost to full"));
-                    case "Teleporter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to teleport 20 blocks in front of you (requires you hold a item because I can't code)"));
-                    case "Nether Shifter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to swap between the nether and the overworld (requires you hold a item because I can't code)"));
-                    case "End Shifter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to swap between the end and the overworld (requires you hold a item because I can't code)"));
+                    case "Teleporter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to teleport 20 blocks in front of you"));
+                    case "Nether Shifter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to swap between the nether and the overworld"));
+                    case "End Shifter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to swap between the end and the overworld"));
                 }
             });
         }
