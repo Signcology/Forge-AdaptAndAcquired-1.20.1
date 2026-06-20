@@ -49,11 +49,23 @@ public class ResearchTool extends Item {
                 PlaySkillUnlocked(level, player, player.blockPosition());
             }
         }
+        else if (skills.getDefSkill().equals("Fall Damage Immunity")) {
+            if(block == Blocks.END_STONE) {
+                skills.setDefSkill("Gravity Shifter");
+                player.sendSystemMessage(Component.literal("Acquired \"Gravity Shifter\" skill").withStyle(ChatFormatting.GREEN));
+                PlaySkillUnlocked(level, player, player.blockPosition());
+            }
+        }
 
         if (skills.getOffSkill().equals("None")) {
             if(block == Blocks.MAGMA_BLOCK) {
                 skills.setOffSkill("Burning Hands");
-                player.sendSystemMessage(Component.literal("Acquired \"Burning Hands\" skill").withStyle(ChatFormatting.GREEN));
+                player.sendSystemMessage(Component.literal("Acquired \"Burning Hands\" skill").withStyle(ChatFormatting.RED));
+                PlaySkillUnlocked(level, player, player.blockPosition());
+            }
+            else if(block == Blocks.BLUE_ICE) {
+                skills.setOffSkill("Freezing Hands");
+                player.sendSystemMessage(Component.literal("Acquired \"Freezing Hands\" skill").withStyle(ChatFormatting.RED));
                 PlaySkillUnlocked(level, player, player.blockPosition());
             }
         }
@@ -61,17 +73,17 @@ public class ResearchTool extends Item {
         if (skills.getSupSkill().equals("None")) {
             if(block == Blocks.HAY_BLOCK) {
                 skills.setSupSkill("Traveler");
-                player.sendSystemMessage(Component.literal("Acquired \"Traveler\" skill").withStyle(ChatFormatting.GREEN));
+                player.sendSystemMessage(Component.literal("Acquired \"Traveler\" skill").withStyle(ChatFormatting.BLUE));
                 PlaySkillUnlocked(level, player, player.blockPosition());
             }
             else if(block == Blocks.NETHER_PORTAL) {
                 skills.setSupSkill("Nether Shifter");
-                player.sendSystemMessage(Component.literal("Acquired \"Nether Shifter\" skill").withStyle(ChatFormatting.GREEN));
+                player.sendSystemMessage(Component.literal("Acquired \"Nether Shifter\" skill").withStyle(ChatFormatting.BLUE));
                 PlaySkillUnlocked(level, player, player.blockPosition());
             }
             else if(block == Blocks.END_PORTAL) {
                 skills.setSupSkill("Nether Shifter");
-                player.sendSystemMessage(Component.literal("Acquired \"End Shifter\" skill").withStyle(ChatFormatting.GREEN));
+                player.sendSystemMessage(Component.literal("Acquired \"End Shifter\" skill").withStyle(ChatFormatting.BLUE));
                 PlaySkillUnlocked(level, player, player.blockPosition());
             }
         }
@@ -89,16 +101,23 @@ public class ResearchTool extends Item {
                 player.sendSystemMessage(Component.literal("Acquired \"Iron Armor Expert\" skill").withStyle(ChatFormatting.GREEN));
                 PlaySkillUnlocked(player);
             }
-            else if(pInteractionTarget.getType() == EntityType.IRON_GOLEM) {
+            else if(pInteractionTarget.getType() == EntityType.COW) {
                 skills.setDefSkill("Leather Armor Expert");
                 player.sendSystemMessage(Component.literal("Acquired \"Leather Armor Expert\" skill").withStyle(ChatFormatting.GREEN));
+                PlaySkillUnlocked(player);
+            }
+        }
+        if (skills.getOffSkill().equals("Burning Hands")) {
+            if(pInteractionTarget.getType() == EntityType.BLAZE) {
+                skills.setOffSkill("Burning Hands+");
+                player.sendSystemMessage(Component.literal("Acquired \"Burning Hands+\" skill").withStyle(ChatFormatting.RED));
                 PlaySkillUnlocked(player);
             }
         }
         if (skills.getSupSkill().equals("None")) {
             if(pInteractionTarget.getType() == EntityType.ENDERMAN) {
                 skills.setSupSkill("Teleporter");
-                player.sendSystemMessage(Component.literal("Acquired \"Teleporter\" skill").withStyle(ChatFormatting.GREEN));
+                player.sendSystemMessage(Component.literal("Acquired \"Teleporter\" skill").withStyle(ChatFormatting.BLUE));
                 PlaySkillUnlocked(player);
             }
         }
@@ -120,13 +139,17 @@ public class ResearchTool extends Item {
                     case "Leather Armor Expert" -> pPlayer.sendSystemMessage(Component.literal("Gain buffs when wearing leather armor"));
                 }
                 pPlayer.sendSystemMessage(Component.literal("Offense Skill: " + skills.getOffSkill()).withStyle(ChatFormatting.AQUA));
-                if (skills.getOffSkill().equals("Burning Hands")) pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click burns and knockback enemies at the cost of a level"));
+                switch (skills.getOffSkill()) {
+                    case "Burning Hands" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click burns and knockback enemies (cost 1 level)"));
+                    case "Burning Hands+" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click burns and knockback enemies (cost 1 level), also gain fire immunity"));
+                    case "Freezing Hands" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to incase the target in ice (cost 1 level)"));
+                }
                 pPlayer.sendSystemMessage(Component.literal("Support Skill: " + skills.getSupSkill()).withStyle(ChatFormatting.AQUA));
                 switch (skills.getSupSkill()) {
                     case "Traveler" -> pPlayer.sendSystemMessage(Component.literal("Slowly regenerate your hunger almost to full"));
-                    case "Teleporter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to teleport 20 blocks in front of you"));
-                    case "Nether Shifter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to swap between the nether and the overworld"));
-                    case "End Shifter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to swap between the end and the overworld"));
+                    case "Teleporter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to teleport 20 blocks in front of you (cost 1 level)"));
+                    case "Nether Shifter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to swap between the nether and the overworld (cost 1 level)"));
+                    case "End Shifter" -> pPlayer.sendSystemMessage(Component.literal("Alt + Right-Click to swap between the end and the overworld (cost 1 level)"));
                 }
             });
         }

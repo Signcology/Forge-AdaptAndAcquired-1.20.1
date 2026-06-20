@@ -3,20 +3,32 @@ package com.signcology.adaptandacquired.event;
 import com.signcology.adaptandacquired.AdaptAndAcquired;
 import com.signcology.adaptandacquired.skill.PlayerSkills;
 import com.signcology.adaptandacquired.skill.PlayerSkillsProvider;
+import com.signcology.adaptandacquired.util.ModTags;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.ParticleUtils;
+import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
@@ -42,6 +54,12 @@ public class ModEvent {
     private static void playEffectFire(Level level, Vec3 position) {
         // NOT WORKING ??????
         level.addParticle(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, position.x, position.y, position.z, 1d, 1d, 1d);
+        //var serverLevel = player.level().getServer().getLevel(player.level().dimension());
+        //serverLevel.sendParticles(ParticleTypes.WAX_OFF, player.position().x, player.position().y, player.position().z, 1, 0, 0, 0, 1);
+    }
+    private static void playEffectAuraBasic(Player player) {
+        var serverLevel = player.level().getServer().getLevel(player.level().dimension());
+        serverLevel.sendParticles(ParticleTypes.WAX_OFF, player.position().x, player.position().y, player.position().z, 1, 0, 0, 0, 1.0);
     }
 
     private static void activateAbility(Level level, Player player, PlayerSkills skills, Entity target) {
@@ -61,6 +79,31 @@ public class ModEvent {
                 dir.multiply(new Vec3(power,power,power));
 
                 target.addDeltaMovement(dir);
+            }
+        }
+        else if(skills.getOffSkill().equals("Freezing Hands") && target != null && !target.isOnFire() && Screen.hasAltDown()) {
+            if (player.experienceLevel > 0) {
+                updatePlayerLevel(level, player, 1);
+                target.setTicksFrozen(200);
+
+
+                var radius = 2;
+                var start = new BlockPos(target.blockPosition().getX()-radius, target.blockPosition().getY()-radius, target.blockPosition().getZ()-radius);
+                for (var i = 0; i<1+radius*2 ; i++)
+                {
+                    for (var j = 0; j<1+radius*2 ; j++)
+                    {
+                        for (var k = 0; k<1+radius*2 ; k++)
+                        {
+                            if (level.getBlockState(start.offset(i,j,k)).isAir() &&
+                                    Math.abs(i) != radius &&
+                                    Math.abs(j) != radius &&
+                                    Math.abs(k) != radius
+                            )
+                                level.setBlock(start.offset(i,j,k), Blocks.ICE.defaultBlockState(), 2);
+                        }
+                    }
+                }
             }
         }
 
@@ -138,66 +181,79 @@ public class ModEvent {
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         var player = event.player;
-        if(event.side == LogicalSide.SERVER) {
-            event.player.getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent(skills -> {
-                // GOLD ARMOR EXPERT SKILL
-                if(skills.getDefSkill().equals("Gold Armor Expert") && event.player.getRandom().nextFloat() < 0.005f) { // Once Every 10 Seconds on Avg
-                    var strength = 2;
-                    if (player.getInventory().getArmor(0).is(Items.GOLDEN_BOOTS)) {
-                        var oldDamage = player.getInventory().getArmor(0).getDamageValue();
-                        player.getInventory().getArmor(0).setDamageValue(oldDamage-strength);
-                    }
-                    if (player.getInventory().getArmor(1).is(Items.GOLDEN_LEGGINGS)) {
-                        var oldDamage = player.getInventory().getArmor(1).getDamageValue();
-                        player.getInventory().getArmor(1).setDamageValue(oldDamage-strength);
-                    }
-                    if (player.getInventory().getArmor(2).is(Items.GOLDEN_CHESTPLATE)) {
-                        var oldDamage = player.getInventory().getArmor(2).getDamageValue();
-                        player.getInventory().getArmor(2).setDamageValue(oldDamage-strength);
-                    }
-                    if (player.getInventory().getArmor(3).is(Items.GOLDEN_HELMET)) {
-                        var oldDamage = player.getInventory().getArmor(3).getDamageValue();
-                        player.getInventory().getArmor(3).setDamageValue(oldDamage-strength);
-                    }
-                    //event.player.sendSystemMessage(Component.literal("Subtracted Thirst"));
+        event.player.getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent(skills -> {
+            // GOLD ARMOR EXPERT SKILL
+            if(event.side == LogicalSide.SERVER && skills.getDefSkill().equals("Gold Armor Expert") && event.player.getRandom().nextFloat() < 0.005f) { // Once Every 10 Seconds on Avg
+                var strength = 2;
+                if (player.getInventory().getArmor(0).is(Items.GOLDEN_BOOTS)) {
+                    var oldDamage = player.getInventory().getArmor(0).getDamageValue();
+                    player.getInventory().getArmor(0).setDamageValue(oldDamage-strength);
                 }
-                else if (skills.getDefSkill().equals("Gold Armor Expert") &&
-                        player.getInventory().getArmor(3).is(Items.GOLDEN_HELMET) &&
-                        player.getInventory().getArmor(2).is(Items.GOLDEN_CHESTPLATE) &&
-                        player.getInventory().getArmor(1).is(Items.GOLDEN_LEGGINGS) &&
-                        player.getInventory().getArmor(0).is(Items.GOLDEN_BOOTS)
-                ) {player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE,2, 1, false, false));}
-                // IRON ARMOR EXPERT SKILL
-                else if (skills.getDefSkill().equals("Iron Armor Expert") &&
-                        player.getInventory().getArmor(3).is(Items.IRON_HELMET) &&
-                        player.getInventory().getArmor(2).is(Items.IRON_CHESTPLATE) &&
-                        player.getInventory().getArmor(1).is(Items.IRON_LEGGINGS) &&
-                        player.getInventory().getArmor(0).is(Items.IRON_BOOTS)
-                ) {player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,2, 0, false, false));}
-                else if(skills.getDefSkill().equals("Leather Armor Expert") && event.player.getRandom().nextFloat() < 0.005f) { // Once Every 10 Seconds on Avg
-                    var strength = 2;
-                    if (player.getInventory().getArmor(0).is(Items.LEATHER_BOOTS)) {
-                        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,2, 0, false, false));
-                    }
-                    if (player.getInventory().getArmor(1).is(Items.LEATHER_LEGGINGS)) {
-                        player.addEffect(new MobEffectInstance(MobEffects.JUMP,2, 0, false, false));
-                    }
-                    /*
-                    if (player.getInventory().getArmor(2).is(Items.LEATHER_CHESTPLATE)) {
-                        //player.addEffect(new MobEffectInstance(MobEffects.,2, 0, false, false));
-                    }
-                    */
-                    if (player.getInventory().getArmor(3).is(Items.LEATHER_HELMET)) {
-                        player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION,220, 0, false, false));
-                    }
+                if (player.getInventory().getArmor(1).is(Items.GOLDEN_LEGGINGS)) {
+                    var oldDamage = player.getInventory().getArmor(1).getDamageValue();
+                    player.getInventory().getArmor(1).setDamageValue(oldDamage-strength);
                 }
+                if (player.getInventory().getArmor(2).is(Items.GOLDEN_CHESTPLATE)) {
+                    var oldDamage = player.getInventory().getArmor(2).getDamageValue();
+                    player.getInventory().getArmor(2).setDamageValue(oldDamage-strength);
+                }
+                if (player.getInventory().getArmor(3).is(Items.GOLDEN_HELMET)) {
+                    var oldDamage = player.getInventory().getArmor(3).getDamageValue();
+                    player.getInventory().getArmor(3).setDamageValue(oldDamage-strength);
+                }
+                //event.player.sendSystemMessage(Component.literal("Subtracted Thirst"));
+            }
+            else if (event.side == LogicalSide.SERVER && skills.getDefSkill().equals("Gold Armor Expert") &&
+                    player.getInventory().getArmor(3).is(Items.GOLDEN_HELMET) &&
+                    player.getInventory().getArmor(2).is(Items.GOLDEN_CHESTPLATE) &&
+                    player.getInventory().getArmor(1).is(Items.GOLDEN_LEGGINGS) &&
+                    player.getInventory().getArmor(0).is(Items.GOLDEN_BOOTS)
+            ) {player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE,2, 1, false, false));}
+            // IRON ARMOR EXPERT SKILL
+            else if (event.side == LogicalSide.SERVER && skills.getDefSkill().equals("Iron Armor Expert") &&
+                    player.getInventory().getArmor(3).is(Items.IRON_HELMET) &&
+                    player.getInventory().getArmor(2).is(Items.IRON_CHESTPLATE) &&
+                    player.getInventory().getArmor(1).is(Items.IRON_LEGGINGS) &&
+                    player.getInventory().getArmor(0).is(Items.IRON_BOOTS)
+            ) {player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,2, 0, false, false));}
+            else if(event.side == LogicalSide.SERVER && skills.getDefSkill().equals("Leather Armor Expert")) {
+                if (player.getInventory().getArmor(0).is(Items.LEATHER_BOOTS)) {
+                    player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,2, 0, false, false));
+                }
+                if (player.getInventory().getArmor(1).is(Items.LEATHER_LEGGINGS)) {
+                    player.addEffect(new MobEffectInstance(MobEffects.JUMP,2, 0, false, false));
+                }
+                if (player.getInventory().getArmor(3).is(Items.LEATHER_HELMET)) {
+                    player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION,220, 0, false, false));
+                }
+            }
+            else if(skills.getDefSkill().equals("Gravity Shifter") && Screen.hasAltDown()) {
+                if (event.side == LogicalSide.SERVER) {
+                    player.addEffect(new MobEffectInstance(MobEffects.LEVITATION,2, 9, false, false));
+                    player.level().playSound(null, player.blockPosition(), SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS);
+                }
+                player.sendSystemMessage(Component.literal("Gravity Shifter TEST").withStyle(ChatFormatting.LIGHT_PURPLE));
+                var serverLevel = player.level().getServer().getLevel(player.level().dimension());
+                serverLevel.sendParticles(ParticleTypes.WAX_OFF, player.position().x, player.position().y, player.position().z, 1, 0, 0, 0, 1);
+                //ParticleUtils.spawnParticlesOnBlockFaces(player.level(), player.blockPosition(), ParticleTypes.WAX_OFF, UniformInt.of(3, 5));
+                //player.playSound(SoundEvents.SOUL_ESCAPE);
+            }
+            else if(event.side == LogicalSide.SERVER && skills.getDefSkill().equals("Repel") && Screen.hasAltDown()) {
+                var list = player.level().getNearbyEntities(LivingEntity.class, TargetingConditions.DEFAULT, player, AABB.ofSize(player.position(), 10,10,10));
+                for (var i = 0; i<list.toArray().length; i++) {
+                    player.sendSystemMessage(Component.literal("Repel TEST").withStyle(ChatFormatting.LIGHT_PURPLE));
+                }
+                //player.addEffect(new MobEffectInstance(MobEffects.LEVITATION,2, 9, false, false));
 
-                // TRAVELER SKILL
-                if(skills.getSupSkill().equals("Traveler") && player.getFoodData().getFoodLevel() < 18 && event.player.getRandom().nextFloat() < 0.005f) {
-                    player.getFoodData().setFoodLevel(player.getFoodData().getFoodLevel() + 1);
-                }
-            });
-        }
+                //player.playSound(SoundEvents.SOUL_ESCAPE);
+            }
+
+            // TRAVELER SKILL
+            if(event.side == LogicalSide.SERVER && skills.getSupSkill().equals("Traveler") && player.getFoodData().getFoodLevel() < 18 && event.player.getRandom().nextFloat() < 0.005f) {
+                player.getFoodData().setFoodLevel(player.getFoodData().getFoodLevel() + 1);
+            }
+        });
+
     }
 
 
