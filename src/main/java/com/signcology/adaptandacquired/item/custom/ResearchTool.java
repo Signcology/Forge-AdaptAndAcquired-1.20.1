@@ -82,7 +82,7 @@ public class ResearchTool extends Item {
                 PlaySkillUnlocked(level, player, player.blockPosition());
             }
             else if(block == Blocks.END_PORTAL) {
-                skills.setSupSkill("Nether Shifter");
+                skills.setSupSkill("End Shifter");
                 player.sendSystemMessage(Component.literal("Acquired \"End Shifter\" skill").withStyle(ChatFormatting.BLUE));
                 PlaySkillUnlocked(level, player, player.blockPosition());
             }

@@ -29,6 +29,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -107,34 +108,52 @@ public class ModEvent {
             level.playSound(null, player.blockPosition(), SoundEvents.TRIDENT_RETURN, SoundSource.PLAYERS);
         }
         else if (skills.getSupSkill().equals("Nether Shifter") && player.experienceLevel > 0 && Screen.hasAltDown()) {
-            player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING,100, 0, false, false));
+            var nether = Objects.requireNonNull(level.getServer()).getLevel(Level.NETHER);
+            var overworld = Objects.requireNonNull(level.getServer()).getLevel(Level.OVERWORLD);
             level.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS);
             if (level.dimension() == Level.OVERWORLD) {
-                //player.changeDimension(level.getServer().getLevel(Level.NETHER));
-                player.teleportTo(level.getServer().getLevel(Level.NETHER), player.position().x/8, player.position().y, player.position().z/8, null, player.yRotO, player.xRotO);
-                level.getServer().getLevel(Level.NETHER).playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS);
-                updatePlayerLevel(level.getServer().getLevel(Level.NETHER), player, 1);
+                var destination_pos = new BlockPos((int) player.position().x/8, (int) player.position().y, (int) player.position().z/8);
+                while (nether.getBlockState(destination_pos).canOcclude()) {
+                    destination_pos = destination_pos.offset(0,1,0);
+                }
+                player.teleportTo(nether, destination_pos.getX(), destination_pos.getY(), destination_pos.getZ(), null, player.yRotO, player.xRotO);
+                nether.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS);
+                updatePlayerLevel(nether, player, 1);
             }
             else if (level.dimension() == Level.NETHER) {
-                player.teleportTo(level.getServer().getLevel(Level.OVERWORLD), player.position().x*8, player.position().y, player.position().z*8, null, player.yRotO, player.xRotO);
-                level.getServer().getLevel(Level.OVERWORLD).playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS);
-                updatePlayerLevel(level.getServer().getLevel(Level.OVERWORLD), player, 1);
+                var destination_pos = new BlockPos((int) player.position().x*8, (int) player.position().y, (int) player.position().z*8);
+                while (overworld.getBlockState(destination_pos).canOcclude()) {
+                    destination_pos = destination_pos.offset(0,1,0);
+                }
+                player.teleportTo(overworld, destination_pos.getX(), destination_pos.getY(), destination_pos.getZ(), null, player.yRotO, player.xRotO);
+                overworld.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS);
+                updatePlayerLevel(overworld, player, 1);
             }
+            player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING,100, 0, false, false));
         }
         else if (skills.getSupSkill().equals("End Shifter") && player.experienceLevel > 0 && Screen.hasAltDown()) {
-            updatePlayerLevel(level, player, 1);
-            player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING,100, 0, false, false));
+            var end = Objects.requireNonNull(level.getServer()).getLevel(Level.END);
+            var overworld = Objects.requireNonNull(level.getServer()).getLevel(Level.OVERWORLD);
             level.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS);
             if (level.dimension() == Level.OVERWORLD) {
-                player.teleportTo(level.getServer().getLevel(Level.END), player.position().x, player.position().y, player.position().z, null, player.yRotO, player.xRotO);
-                level.getServer().getLevel(Level.END).playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS);
-                updatePlayerLevel(level.getServer().getLevel(Level.END), player, 1);
+                var destination_pos = new BlockPos((int) player.position().x, (int) player.position().y, (int) player.position().z);
+                while (end.getBlockState(destination_pos).canOcclude()) {
+                    destination_pos = destination_pos.offset(0,1,0);
+                }
+                player.teleportTo(end, destination_pos.getX(), destination_pos.getY(), destination_pos.getZ(), null, player.yRotO, player.xRotO);
+                end.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS);
+                updatePlayerLevel(end, player, 1);
             }
             else if (level.dimension() == Level.END) {
-                player.teleportTo(level.getServer().getLevel(Level.OVERWORLD), player.position().x, player.position().y, player.position().z, null, player.yRotO, player.xRotO);
-                level.getServer().getLevel(Level.OVERWORLD).playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS);
-                updatePlayerLevel(level.getServer().getLevel(Level.OVERWORLD), player, 1);
+                var destination_pos = new BlockPos((int) player.position().x, (int) player.position().y, (int) player.position().z);
+                while (overworld.getBlockState(destination_pos).canOcclude()) {
+                    destination_pos = destination_pos.offset(0,1,0);
+                }
+                player.teleportTo(overworld, destination_pos.getX(), destination_pos.getY(), destination_pos.getZ(), null, player.yRotO, player.xRotO);
+                overworld.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS);
+                updatePlayerLevel(overworld, player, 1);
             }
+            player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING,100, 0, false, false));
         }
 
     }
@@ -177,9 +196,21 @@ public class ModEvent {
             // GOLD ARMOR EXPERT SKILL
             ServerLevel serverLevel = null;
             if(!skills.getDefSkill().equals("None") || !skills.getOffSkill().equals("None") || !skills.getSupSkill().equals("None")) {
-                serverLevel = player.level().getServer().getLevel(player.level().dimension());
-                if (event.player.getRandom().nextFloat() < 0.1f)
-                    serverLevel.sendParticles(ParticleTypes.WAX_OFF, player.position().x, player.position().y+1, player.position().z, 1, .5, .5, .5, 1);
+                serverLevel = Objects.requireNonNull(player.level().getServer()).getLevel(player.level().dimension());
+                if (event.player.getRandom().nextFloat() < 0.1f) {
+                    assert serverLevel != null;
+                    switch (skills.getDefSkill()) {
+                        case "Gold Armor Expert" -> serverLevel.sendParticles(ParticleTypes.WAX_ON, player.position().x, player.position().y+1, player.position().z, 1, .15, .5, .15, 1);
+                        case "Iron Armor Expert" -> serverLevel.sendParticles(ParticleTypes.WAX_OFF, player.position().x, player.position().y+1, player.position().z, 1, .15, .5, .15, 1);
+                        case "Leather Armor Expert" -> serverLevel.sendParticles(ParticleTypes.COMPOSTER, player.position().x, player.position().y+1, player.position().z, 1, .15, .5, .15, 1);
+                    }
+                    switch (skills.getSupSkill()) {
+                        case "Teleporter" -> serverLevel.sendParticles(ParticleTypes.PORTAL, player.position().x, player.position().y+1, player.position().z, 1, .15, .5, .15, 1);
+                        case "Nether Shifter" -> serverLevel.sendParticles(ParticleTypes.CRIMSON_SPORE, player.position().x, player.position().y+1, player.position().z, 1, .15, .5, .15, 0.01);
+                        case "End Shifter" -> serverLevel.sendParticles(ParticleTypes.ENCHANTED_HIT, player.position().x, player.position().y+1, player.position().z, 1, .15, .5, .15, 0.01);
+                    }
+
+                }
             }
 
             //serverLevel.sendParticles(ParticleTypes.WAX_OFF, player.position().x, player.position().y+1, player.position().z, 1, .5, .5, .5, 1);
@@ -234,6 +265,7 @@ public class ModEvent {
                     player.level().playSound(null, player.blockPosition(), SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS);
                 }
                 //player.sendSystemMessage(Component.literal("Gravity Shifter TEST").withStyle(ChatFormatting.LIGHT_PURPLE));
+                assert serverLevel != null;
                 serverLevel.sendParticles(ParticleTypes.WAX_OFF, player.position().x, player.position().y, player.position().z, 1, 0, 0, 0, 1);
                 //ParticleUtils.spawnParticlesOnBlockFaces(player.level(), player.blockPosition(), ParticleTypes.WAX_OFF, UniformInt.of(3, 5));
                 //player.playSound(SoundEvents.SOUL_ESCAPE);
