@@ -3,22 +3,15 @@ package com.signcology.adaptandacquired.event;
 import com.signcology.adaptandacquired.AdaptAndAcquired;
 import com.signcology.adaptandacquired.skill.PlayerSkills;
 import com.signcology.adaptandacquired.skill.PlayerSkillsProvider;
-import com.signcology.adaptandacquired.util.ModTags;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.ParticleUtils;
-import net.minecraft.util.valueproviders.UniformInt;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -27,11 +20,8 @@ import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
@@ -50,7 +40,7 @@ public class ModEvent {
 
     private static void updatePlayerLevel(Level level, Player player, int subtract) {
         player.experienceLevel -= subtract;
-        var xp = EntityType.EXPERIENCE_ORB.spawn(level.getServer().getLevel(level.dimension()), player.blockPosition(), MobSpawnType.COMMAND);
+        var xp = EntityType.EXPERIENCE_ORB.spawn(Objects.requireNonNull(Objects.requireNonNull(level.getServer()).getLevel(level.dimension())), player.blockPosition(), MobSpawnType.COMMAND);
         assert xp != null;
         xp.value = 1;
     }
@@ -99,7 +89,7 @@ public class ModEvent {
             }
         }
 
-        if(skills.getSupSkill().equals("Teleporter") && player.experienceLevel > 0 && Screen.hasAltDown()) {
+        if(skills.getSupSkill().equals("Teleporter") && player.experienceLevel >= 1 && Screen.hasAltDown()) {
             player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING,20, 0, false, false));
             var dis = 20;
             var newPos = player.position().add(player.getLookAngle().multiply(dis,dis,dis));
@@ -107,9 +97,11 @@ public class ModEvent {
             updatePlayerLevel(level, player, 1);
             level.playSound(null, player.blockPosition(), SoundEvents.TRIDENT_RETURN, SoundSource.PLAYERS);
         }
-        else if (skills.getSupSkill().equals("Nether Shifter") && player.experienceLevel > 0 && Screen.hasAltDown()) {
+        else if (skills.getSupSkill().equals("Nether Shifter") && player.experienceLevel >= 2 && Screen.hasAltDown()) {
             var nether = Objects.requireNonNull(level.getServer()).getLevel(Level.NETHER);
             var overworld = Objects.requireNonNull(level.getServer()).getLevel(Level.OVERWORLD);
+            assert nether != null;
+            assert overworld != null;
             level.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS);
             if (level.dimension() == Level.OVERWORLD) {
                 var destination_pos = new BlockPos((int) player.position().x/8, (int) player.position().y, (int) player.position().z/8);
@@ -131,9 +123,11 @@ public class ModEvent {
             }
             player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING,100, 0, false, false));
         }
-        else if (skills.getSupSkill().equals("End Shifter") && player.experienceLevel > 0 && Screen.hasAltDown()) {
+        else if (skills.getSupSkill().equals("End Shifter") && player.experienceLevel >= 2 && Screen.hasAltDown()) {
             var end = Objects.requireNonNull(level.getServer()).getLevel(Level.END);
             var overworld = Objects.requireNonNull(level.getServer()).getLevel(Level.OVERWORLD);
+            assert end != null;
+            assert overworld != null;
             level.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS);
             if (level.dimension() == Level.OVERWORLD) {
                 var destination_pos = new BlockPos((int) player.position().x, (int) player.position().y, (int) player.position().z);
