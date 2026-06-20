@@ -13,6 +13,7 @@ import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.ParticleUtils;
@@ -41,6 +42,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 
+import java.util.Objects;
+
 @Mod.EventBusSubscriber(modid = AdaptAndAcquired.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ModEvent {
 
@@ -51,21 +54,9 @@ public class ModEvent {
         xp.value = 1;
     }
 
-    private static void playEffectFire(Level level, Vec3 position) {
-        // NOT WORKING ??????
-        level.addParticle(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, position.x, position.y, position.z, 1d, 1d, 1d);
-        //var serverLevel = player.level().getServer().getLevel(player.level().dimension());
-        //serverLevel.sendParticles(ParticleTypes.WAX_OFF, player.position().x, player.position().y, player.position().z, 1, 0, 0, 0, 1);
-    }
-    private static void playEffectAuraBasic(Player player) {
-        var serverLevel = player.level().getServer().getLevel(player.level().dimension());
-        serverLevel.sendParticles(ParticleTypes.WAX_OFF, player.position().x, player.position().y, player.position().z, 1, 0, 0, 0, 1.0);
-    }
-
     private static void activateAbility(Level level, Player player, PlayerSkills skills, Entity target) {
         if(skills.getOffSkill().equals("Burning Hands") && target != null && !target.isOnFire() && Screen.hasAltDown()) {
             target.setSecondsOnFire(10);
-            playEffectFire(level, target.position());
 
             if (player.experienceLevel > 0) {
                 updatePlayerLevel(level, player, 1);
@@ -181,8 +172,18 @@ public class ModEvent {
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         var player = event.player;
+
         event.player.getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent(skills -> {
             // GOLD ARMOR EXPERT SKILL
+            ServerLevel serverLevel = null;
+            if(!skills.getDefSkill().equals("None") || !skills.getOffSkill().equals("None") || !skills.getSupSkill().equals("None")) {
+                serverLevel = player.level().getServer().getLevel(player.level().dimension());
+                if (event.player.getRandom().nextFloat() < 0.1f)
+                    serverLevel.sendParticles(ParticleTypes.WAX_OFF, player.position().x, player.position().y+1, player.position().z, 1, .5, .5, .5, 1);
+            }
+
+            //serverLevel.sendParticles(ParticleTypes.WAX_OFF, player.position().x, player.position().y+1, player.position().z, 1, .5, .5, .5, 1);
+
             if(event.side == LogicalSide.SERVER && skills.getDefSkill().equals("Gold Armor Expert") && event.player.getRandom().nextFloat() < 0.005f) { // Once Every 10 Seconds on Avg
                 var strength = 2;
                 if (player.getInventory().getArmor(0).is(Items.GOLDEN_BOOTS)) {
@@ -232,8 +233,7 @@ public class ModEvent {
                     player.addEffect(new MobEffectInstance(MobEffects.LEVITATION,2, 9, false, false));
                     player.level().playSound(null, player.blockPosition(), SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS);
                 }
-                player.sendSystemMessage(Component.literal("Gravity Shifter TEST").withStyle(ChatFormatting.LIGHT_PURPLE));
-                var serverLevel = player.level().getServer().getLevel(player.level().dimension());
+                //player.sendSystemMessage(Component.literal("Gravity Shifter TEST").withStyle(ChatFormatting.LIGHT_PURPLE));
                 serverLevel.sendParticles(ParticleTypes.WAX_OFF, player.position().x, player.position().y, player.position().z, 1, 0, 0, 0, 1);
                 //ParticleUtils.spawnParticlesOnBlockFaces(player.level(), player.blockPosition(), ParticleTypes.WAX_OFF, UniformInt.of(3, 5));
                 //player.playSound(SoundEvents.SOUL_ESCAPE);
