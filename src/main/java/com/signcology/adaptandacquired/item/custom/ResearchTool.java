@@ -158,7 +158,7 @@ public class ResearchTool extends Item {
     }
 
     @Override
-    public @NotNull InteractionResult interactLivingEntity(ItemStack pStack, Player pPlayer, LivingEntity pInteractionTarget, InteractionHand pUsedHand) {
+    public @NotNull InteractionResult interactLivingEntity(@NotNull ItemStack pStack, Player pPlayer, @NotNull LivingEntity pInteractionTarget, @NotNull InteractionHand pUsedHand) {
         if(!pPlayer.level().isClientSide()) {
             pPlayer.getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent(skills -> {
                 CheckSkills(pPlayer, skills, pInteractionTarget);
