@@ -3,10 +3,13 @@ package com.signcology.adaptandacquired.event;
 import com.signcology.adaptandacquired.AdaptAndAcquired;
 import com.signcology.adaptandacquired.skill.PlayerSkills;
 import com.signcology.adaptandacquired.skill.PlayerSkillsProvider;
+import com.signcology.adaptandacquired.worldgen.dimension.ModDimensions;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.font.providers.UnihexProvider;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.data.worldgen.DimensionTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -21,6 +24,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
@@ -149,6 +153,26 @@ public class ModEvent {
             }
             player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING,100, 0, false, false));
         }
+        else if (skills.getSupSkill().equals("World Shifter") && player.experienceLevel >= 2 && Screen.hasAltDown()) {
+            var altworld = Objects.requireNonNull(level.getServer()).getLevel(ModDimensions.ALT_LEVEL_KEY);
+            var overworld = Objects.requireNonNull(level.getServer()).getLevel(Level.OVERWORLD);
+            assert altworld != null;
+            assert overworld != null;
+            level.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS);
+            if (level.dimension() == Level.OVERWORLD) {
+                var destination_pos = new BlockPos((int) player.position().x, (int) player.position().y, (int) player.position().z);
+                player.teleportTo(altworld, destination_pos.getX(), destination_pos.getY(), destination_pos.getZ(), null, player.yRotO, player.xRotO);
+                altworld.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS);
+                updatePlayerLevel(altworld, player, 1);
+            }
+            else if (level.dimension() == ModDimensions.ALT_LEVEL_KEY) {
+                var destination_pos = new BlockPos((int) player.position().x, (int) player.position().y, (int) player.position().z);
+                player.teleportTo(overworld, destination_pos.getX(), destination_pos.getY(), destination_pos.getZ(), null, player.yRotO, player.xRotO);
+                overworld.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS);
+                updatePlayerLevel(overworld, player, 1);
+            }
+            player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING,100, 0, false, false));
+        }
 
     }
 
@@ -187,6 +211,10 @@ public class ModEvent {
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         var player = event.player;
+
+        if (event.player.level().dimension() == ModDimensions.ALT_LEVEL_KEY) {
+            player.addEffect(new MobEffectInstance(MobEffects.DARKNESS,2, 1, false, false));
+        }
 
         event.player.getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent(skills -> {
             // GOLD ARMOR EXPERT SKILL

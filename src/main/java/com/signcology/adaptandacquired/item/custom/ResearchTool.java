@@ -52,7 +52,7 @@ public class ResearchTool extends Item {
         else if (skills.getDefSkill().equals("Fall Damage Immunity")) {
             if(block == Blocks.END_STONE) {
                 skills.setDefSkill("Gravity Shifter");
-                player.sendSystemMessage(Component.literal("Acquired \"Gravity Shifter\" skill").withStyle(ChatFormatting.GREEN));
+                player.sendSystemMessage(Component.literal("Acquired \"Gravity Shifter\" skill").withStyle(ChatFormatting.LIGHT_PURPLE));
                 PlaySkillUnlocked(level, player, player.blockPosition());
             }
         }
@@ -84,6 +84,20 @@ public class ResearchTool extends Item {
             else if(block == Blocks.END_PORTAL) {
                 skills.setSupSkill("End Shifter");
                 player.sendSystemMessage(Component.literal("Acquired \"End Shifter\" skill").withStyle(ChatFormatting.BLUE));
+                PlaySkillUnlocked(level, player, player.blockPosition());
+            }
+        }
+        else if (skills.getSupSkill().equals("Nether Shifter")) {
+            if(block == Blocks.END_PORTAL) {
+                skills.setSupSkill("World Shifter");
+                player.sendSystemMessage(Component.literal("Acquired \"World Shifter\" skill").withStyle(ChatFormatting.LIGHT_PURPLE));
+                PlaySkillUnlocked(level, player, player.blockPosition());
+            }
+        }
+        else if (skills.getSupSkill().equals("End Shifter")) {
+            if(block == Blocks.NETHER_PORTAL) {
+                skills.setSupSkill("World Shifter");
+                player.sendSystemMessage(Component.literal("Acquired \"World Shifter\" skill").withStyle(ChatFormatting.LIGHT_PURPLE));
                 PlaySkillUnlocked(level, player, player.blockPosition());
             }
         }
