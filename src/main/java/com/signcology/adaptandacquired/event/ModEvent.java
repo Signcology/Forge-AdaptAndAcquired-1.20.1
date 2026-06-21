@@ -157,23 +157,25 @@ public class ModEvent {
         if(event.getObject() instanceof Player) {
             if(!event.getObject().getCapability(PlayerSkillsProvider.PLAYER_SKILLS).isPresent()) {
                 event.addCapability(ResourceLocation.fromNamespaceAndPath(AdaptAndAcquired.MODID, "perks"), new PlayerSkillsProvider());
-                //System.out.println("ADDING CAP");
+                System.out.println("ADDING CAP");
             }
-            //if(!event.getObject().getCapability(PlayerSkillsProvider.PLAYER_SKILLS).isPresent()) {
-            //    System.out.println("YOU DID IT WRONG");
-            //}
         }
     }
 
     @SubscribeEvent
     public static void onPlayerCloned(PlayerEvent.Clone event) {
         //System.out.println("Player Cloned");
-        if(event.isWasDeath()) {
-            System.out.println("Death");
-            event.getOriginal().getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent((oldStore) ->
-                    event.getEntity().getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent((newStore) ->
-                            newStore.copyFrom(oldStore)));
-        }
+        System.out.println("Death");
+
+        if (event.getOriginal().getCapability(PlayerSkillsProvider.PLAYER_SKILLS).isPresent())
+            event.getEntity().sendSystemMessage(Component.literal("Old Player Instance Data Found").withStyle(ChatFormatting.GREEN));
+        else
+            event.getEntity().sendSystemMessage(Component.literal("Old Player Instance Data NOT Found").withStyle(ChatFormatting.RED));
+
+        event.getOriginal().getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent(oldStore ->
+                event.getEntity().getCapability(PlayerSkillsProvider.PLAYER_SKILLS).ifPresent(newStore ->
+                        newStore.copyFrom(oldStore)));
+
     }
 
 
